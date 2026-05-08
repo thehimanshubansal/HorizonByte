@@ -6,7 +6,7 @@ api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
 
-def generate_response(query: str, retrieved_context: list[str], chat_history: str, model_name: str = "gemini-2.5-flash", persona: str = "cyber-brutalist") -> str:
+def generate_response(query: str, retrieved_context: list[str], chat_history: str, model_name: str = "gemini-2.5-flash-lite", persona: str = "cyber-brutalist") -> str:
     if not api_key:
         return "ERROR: GEMINI_API_KEY environment variable is not set. Please set it to proceed."
         
