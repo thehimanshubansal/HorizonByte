@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HorizonByte</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.15;
+        }
+        .crt-scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, rgba(0, 127, 255, 0.05), transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 101;
+        }
+        .crt-screen {
+            position: relative;
+            overflow: hidden;
+            background-color: #0e0e0e;
+        }
+        .crt-screen::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.4) 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+        .phosphor-glow {
+            text-shadow: 0 0 8px rgba(0, 127, 255, 0.6);
+        }
+        .border-glow {
+            box-shadow: inset 0 0 10px rgba(0, 127, 255, 0.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar to match theme */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0e0e0e;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #007FFF;
+            border-radius: 0px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary": "#c8c6c7",
+                      "outline": "#8b91a0",
+                      "on-error": "#690005",
+                      "on-error-container": "#ffdad6",
+                      "background": "#131313",
+                      "on-tertiary-fixed-variant": "#474747",
+                      "on-secondary": "#303031",
+                      "on-secondary-container": "#bab8b9",
+                      "secondary-fixed-dim": "#c8c6c7",
+                      "primary-fixed": "#d7e2ff",
+                      "surface-bright": "#3a3939",
+                      "inverse-surface": "#e5e2e1",
+                      "on-primary-fixed-variant": "#004590",
+                      "surface-container-low": "#1c1b1b",
+                      "on-tertiary": "#303030",
+                      "tertiary": "#c8c6c6",
+                      "primary-container": "#448fff",
+                      "primary": "#007FFF",
+                      "secondary-fixed": "#e5e2e3",
+                      "on-primary": "#002f66",
+                      "surface-tint": "#abc7ff",
+                      "surface-container-highest": "#353534",
+                      "on-primary-fixed": "#001b3f",
+                      "tertiary-fixed-dim": "#c8c6c6",
+                      "tertiary-container": "#929090",
+                      "secondary-container": "#49494a",
+                      "primary-fixed-dim": "#abc7ff",
+                      "surface": "#131313",
+                      "on-background": "#e5e2e1",
+                      "outline-variant": "#414754",
+                      "surface-container-high": "#2a2a2a",
+                      "on-primary-container": "#002859",
+                      "surface-variant": "#353534",
+                      "surface-container-lowest": "#0e0e0e",
+                      "inverse-on-surface": "#313030",
+                      "on-secondary-fixed": "#1b1b1c",
+                      "on-tertiary-fixed": "#1b1c1c",
+                      "on-tertiary-container": "#2a2a2a",
+                      "error-container": "#93000a",
+                      "on-secondary-fixed-variant": "#474647",
+                      "surface-dim": "#131313",
+                      "tertiary-fixed": "#e4e2e1",
+                      "error": "#ffb4ab",
+                      "on-surface": "#e5e2e1",
+                      "on-surface-variant": "#c1c6d7",
+                      "inverse-primary": "#005cbc",
+                      "surface-container": "#201f1f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0px",
+                      "lg": "0px",
+                      "xl": "0px",
+                      "full": "0px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "xs": "4px",
+                      "gutter": "1px",
+                      "sm": "8px",
+                      "base": "4px",
+                      "xl": "48px",
+                      "margin": "24px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "code-sm": ["Space Mono"],
+                      "h1": ["Space Mono"],
+                      "display": ["Space Mono"],
+                      "h2": ["Space Mono"],
+                      "body-md": ["Space Mono"],
+                      "label-caps": ["Space Mono"],
+                      "body-lg": ["Space Mono"]
+              },
+              "fontSize": {
+                      "code-sm": ["12px", {"lineHeight": "1.6", "letterSpacing": "0.05em", "fontWeight": "400"}],
+                      "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "display": ["42px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                      "h2": ["24px", {"lineHeight": "1.3", "letterSpacing": "0em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "1.6", "letterSpacing": "0.02em", "fontWeight": "400"}],
+                      "label-caps": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.15em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-primary font-body-md overflow-hidden crt-screen h-screen">
+<div class="crt-overlay"></div>
+<div class="crt-scanline"></div>
+<div class="flex h-full w-full relative z-10">
+<!-- Main Workspace -->
+<main class="flex-1 flex flex-col h-full bg-background relative border-glow">
+<!-- TopAppBar Component -->
+<header class="flex justify-between items-center w-full px-lg h-16 border-b border-outline-variant flex-shrink-0 bg-background">
+<div class="flex items-center w-full">
+<h1 class="text-h2 font-h2 font-bold text-primary tracking-tighter phosphor-glow shrink-0">HorizonByte</h1>
+<nav class="hidden lg:flex flex-1 justify-center items-center gap-lg">
+<a class="font-code-sm text-code-sm uppercase tracking-widest text-primary border-b-2 border-primary pb-1" href="#">TERMINAL</a>
+<a class="font-code-sm text-code-sm uppercase tracking-widest text-outline hover:text-primary transition-all duration-75 cursor-pointer" onclick="document.getElementById('about-modal').classList.remove('hidden')">ABOUT</a>
+<a class="font-code-sm text-code-sm uppercase tracking-widest text-outline hover:text-primary transition-all duration-75 cursor-pointer" onclick="document.getElementById('config-modal').classList.remove('hidden')">CONFIG</a>
+</nav>
+<div class="flex items-center gap-md shrink-0">
+<button class="p-sm text-primary hover:bg-primary hover:text-on-primary transition-all duration-75 active:scale-95">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Chat Content Area -->
+<section class="flex-1 overflow-y-auto p-lg custom-scrollbar">
+<!-- Branding Header -->
+<div class="max-w-4xl mx-auto mt-xl mb-xl text-center">
+<div class="inline-block border border-primary p-md mb-md bg-primary/5">
+<span class="material-symbols-outlined text-[48px] text-primary phosphor-glow">wb_sunny</span>
+</div>
+<h2 class="font-display text-display text-primary phosphor-glow mb-sm">HorizonByte v1.0</h2>
+<p class="font-code-sm text-code-sm text-outline max-w-lg mx-auto">A RAG System by HIMANSHU BANSAL</p>
+</div><div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-md mb-xl">
+<div class="p-md border border-primary/20 bg-primary/5 relative overflow-hidden group">
+<div class="font-label-caps text-label-caps text-outline mb-xs relative z-10">RESPONSE_TIME</div>
+<div id="metrics-latency" class="font-code-sm text-body-lg text-primary phosphor-glow relative z-10">0.00s</div>
+<div class="absolute -right-2 -bottom-2 opacity-10 pointer-events-none">
+    <span class="material-symbols-outlined text-[80px]">timer</span>
+</div>
+</div>
+<div class="p-md border border-primary/20 bg-primary/5 relative overflow-hidden group">
+<div class="font-label-caps text-label-caps text-outline mb-xs relative z-10">SYS_STATUS</div>
+<div id="metrics-status" class="font-code-sm text-body-lg text-primary phosphor-glow relative z-10">STANDBY</div>
+<div class="absolute -right-2 -bottom-2 opacity-10 pointer-events-none text-primary">
+    <span id="status-icon" class="material-symbols-outlined text-[80px]">memory</span>
+</div>
+<div id="status-progress" class="absolute bottom-0 left-0 h-1 bg-primary w-0 transition-all duration-300 z-20 shadow-[0_0_8px_theme('colors.primary')]"></div>
+</div>
+<div class="p-md border border-primary/20 bg-primary/5 relative overflow-hidden">
+<div class="font-label-caps text-label-caps text-outline mb-xs relative z-10">SESSION_ID</div>
+<div class="font-code-sm text-body-lg text-primary phosphor-glow uppercase relative z-10">SID-77-B-0X42</div>
+<div class="absolute -right-2 -bottom-2 opacity-10 pointer-events-none">
+    <span class="material-symbols-outlined text-[80px]">fingerprint</span>
+</div>
+</div>
+</div>
+<!-- Chat History Area -->
+<div class="max-w-4xl mx-auto space-y-lg" id="chat-history">
+    <!-- Chat messages will appear here -->
+</div>
+<!-- Suggestion Chips -->
+<div id="suggestion-chips-container" class="max-w-4xl mx-auto mt-xl flex flex-wrap gap-sm justify-center">
+    <!-- Dynamic chips will be inserted here -->
+</div>
+</section>
+<!-- Input Bar -->
+<footer class="p-lg border-t border-outline-variant bg-surface-container-lowest">
+<form id="chat-form" class="max-w-4xl mx-auto relative mt-md">
+<div id="file-preview-container" class="absolute -top-12 left-0 flex gap-sm">
+    <!-- File chips will appear here -->
+</div>
+<div class="absolute left-md top-1/2 -translate-y-1/2 flex items-center gap-sm pointer-events-none">
+<span class="text-primary font-code-sm text-code-sm phosphor-glow">&gt;</span>
+</div>
+<input id="chat-input" class="w-full bg-background border border-outline-variant py-md pl-xl pr-[160px] text-primary font-code-sm focus:border-primary focus:ring-0 placeholder:text-outline/40" placeholder="Enter queries, write your thoughts, etc" type="text" required/>
+<div class="absolute right-md top-1/2 -translate-y-1/2 flex items-center gap-md">
+<button type="button" class="p-xs text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">mic</span>
+</button>
+<select id="rephrase-tone" class="hidden bg-surface-container-low border border-outline-variant text-primary font-code-sm text-[12px] p-xs focus:border-primary focus:ring-0">
+    <option value="Professional">Professional</option>
+    <option value="Casual">Casual</option>
+    <option value="Friendly">Friendly</option>
+    <option value="Direct">Direct</option>
+</select>
+<button type="button" id="rephrase-btn" class="p-xs text-outline hover:text-primary transition-colors border border-outline/20" title="Rephrase Hinglish to English">
+<span class="material-symbols-outlined text-[20px]">g_translate</span>
+</button>
+<label for="file-upload" class="p-xs text-outline hover:text-primary transition-colors cursor-pointer" title="Upload Context Document">
+<span class="material-symbols-outlined text-[20px]">attach_file</span>
+</label>
+<input type="file" id="file-upload" class="hidden" accept=".pdf,.txt">
+<button type="submit" class="p-sm bg-primary text-on-primary hover:bg-primary/90 transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]" style='font-variation-settings: "FILL" 1;'>send</span>
+</button>
+</div>
+</form>
+<div id="upload-status" class="max-w-4xl mx-auto mt-2 text-primary font-code-sm text-xs hidden">Uploading...</div>
+<div class="max-w-4xl mx-auto mt-sm flex justify-between px-xs">
+<span class="font-label-caps text-label-caps text-outline">HORIZON_ENGINE_ACTIVE</span>
+<span class="font-label-caps text-label-caps text-outline">RAG_DATALINK // ENCRYPTED</span>
+</div>
+</footer>
+</main>
+</div>
+<!-- About Modal -->
+<div id="about-modal" class="hidden absolute inset-0 z-50 bg-background/90 flex items-center justify-center p-lg backdrop-blur-sm">
+    <div class="max-w-2xl w-full bg-surface-container-low border border-primary p-xl relative shadow-[0_0_20px_rgba(0,127,255,0.2)]">
+        <button onclick="document.getElementById('about-modal').classList.add('hidden')" class="absolute top-md right-md text-outline hover:text-primary"><span class="material-symbols-outlined">close</span></button>
+        <h2 class="text-h2 font-h2 text-primary mb-md phosphor-glow flex items-center gap-sm"><span class="material-symbols-outlined">info</span> ABOUT HORIZONBYTE</h2>
+        <div class="font-body-md text-on-surface space-y-md leading-relaxed">
+            <p>HorizonByte is a cutting-edge Neural AI Assistant engineered from the ground up with a custom <strong>Retrieval-Augmented Generation (RAG)</strong> architecture.</p>
+            <p>Unlike generic AI platforms, HorizonByte ditches bloated frameworks for raw, high-performance Python processing. It utilizes recursive semantic chunking and FAISS vector indices to ensure context accuracy, driven by the bleeding-edge <span class="text-primary">Gemini 2.5 Flash</span> model.</p>
+            <p><strong>Design Philosophy:</strong> Rooted in Cyber-Brutalist aesthetics, HorizonByte prioritizes information density, functional rigidity, and surgical precision over organic flourishes. Total technical control in a high-bandwidth terminal.</p>
+            <p><strong>Rephrase Engine:</strong> Embedded within the command interface is a specialized Hinglish-to-English translation module. It interprets natural thoughts typed in Hinglish and restructures them into formal, professional, or casual English tone, allowing writers to express raw concepts and refine them for presentation seamlessly.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Config Modal -->
+<div id="config-modal" class="hidden absolute inset-0 z-50 bg-background/90 flex items-center justify-center p-lg backdrop-blur-sm">
+    <div class="max-w-2xl w-full bg-surface-container-low border border-primary p-xl relative shadow-[0_0_20px_rgba(0,127,255,0.2)]">
+        <button onclick="document.getElementById('config-modal').classList.add('hidden')" class="absolute top-md right-md text-outline hover:text-primary"><span class="material-symbols-outlined">close</span></button>
+        <h2 class="text-h2 font-h2 text-primary mb-lg phosphor-glow flex items-center gap-sm"><span class="material-symbols-outlined">settings</span> SYSTEM CONFIGURATION</h2>
+        
+        <div class="space-y-xl">
+            <!-- Theme Color -->
+            <div>
+                <label class="block font-label-caps text-label-caps text-outline mb-sm">SYSTEM THEME</label>
+                <div class="flex gap-md">
+                    <label class="flex items-center gap-sm cursor-pointer group">
+                        <input type="radio" name="theme" value="blue" class="text-primary focus:ring-primary border-outline bg-transparent" checked>
+                        <span class="font-code-sm text-on-surface group-hover:text-primary">Cobalt Blue</span>
+                    </label>
+                    <label class="flex items-center gap-sm cursor-pointer group">
+                        <input type="radio" name="theme" value="green" class="text-primary focus:ring-primary border-outline bg-transparent">
+                        <span class="font-code-sm text-on-surface group-hover:text-primary">Hacker Green</span>
+                    </label>
+                    <label class="flex items-center gap-sm cursor-pointer group">
+                        <input type="radio" name="theme" value="amber" class="text-primary focus:ring-primary border-outline bg-transparent">
+                        <span class="font-code-sm text-on-surface group-hover:text-primary">Amber Alert</span>
+                    </label>
+                    <label class="flex items-center gap-sm cursor-pointer group">
+                        <input type="radio" name="theme" value="crimson" class="text-primary focus:ring-primary border-outline bg-transparent">
+                        <span class="font-code-sm text-on-surface group-hover:text-primary">Crimson</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-md">
+                <!-- Neural Model -->
+                <div>
+                    <label class="block font-label-caps text-label-caps text-outline mb-sm">NEURAL CORE (MODEL)</label>
+                    <select id="config-model" class="w-full bg-surface border border-outline-variant p-sm text-primary font-code-sm focus:border-primary focus:ring-0">
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast)</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Reasoning)</option>
+                    </select>
+                </div>
+                
+                <!-- Persona -->
+                <div>
+                    <label class="block font-label-caps text-label-caps text-outline mb-sm">AI PERSONA</label>
+                    <select id="config-persona" class="w-full bg-surface border border-outline-variant p-sm text-primary font-code-sm focus:border-primary focus:ring-0">
+                        <option value="cyber-brutalist">Cyber-Brutalist (Cold)</option>
+                        <option value="verbose">Verbose (Detailed)</option>
+                        <option value="casual">Casual (Friendly)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Chunk Size -->
+            <div>
+                <label class="block font-label-caps text-label-caps text-outline mb-sm">DATA ASSIMILATION (RAG CHUNK SIZE)</label>
+                <select id="config-chunk" class="w-full bg-surface border border-outline-variant p-sm text-primary font-code-sm focus:border-primary focus:ring-0">
+                    <option value="500">500 Chars (High Precision)</option>
+                    <option value="1000">1000 Chars (Standard Context)</option>
+                    <option value="2000">2000 Chars (Broad Mapping)</option>
+                </select>
+                <p class="text-xs text-outline mt-sm flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">warning</span> Changing chunk size requires re-uploading documents to take effect.</p>
+            </div>
+            
+            <div class="pt-md border-t border-outline-variant flex justify-end">
+                <button onclick="saveConfig()" class="font-code-sm text-code-sm text-on-primary bg-primary px-lg py-sm hover:bg-primary/90 transition-all">SAVE & INITIALIZE</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Background Images (Bento Grid Style for decorative panels) -->
+<div class="fixed inset-0 pointer-events-none opacity-5 -z-10 grid grid-cols-4 grid-rows-4">
+<img class="col-span-2 row-span-2 w-full h-full object-cover" data-alt="A macro shot of a complex circuit board with high-tech components and glowing copper pathways. The lighting is cold and clinical, dominated by electric blue highlights and deep black shadows. The image captures the essence of a sophisticated neural computer system with sharp focus and industrial precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtXCpK-zmd_FWfRg78uglDzzeYL9QAjvQPkjI2ehrdFx82TTJMcI0U_VoiAHytrRDSdb_KKpn_dSrBf9fYCQP4SwCZPZ1O1apgaQxsXBh5WxZHjB3M_XhM0hRCXp1KbZl7mjt-YTfikpjkledxN4g-LB2Uahj57P5oEEaVretsAcukxmb-imqOr_YECFKl8CW2ji7WJ6OTPQWKZ-tp4wcelb4CvXnnm8jM0iNJN8l86HiMBGVFTaE0XpC_ERzkVYHexP5HJ4KBvw"/>
+<div class="col-span-2 row-span-2 bg-background"></div>
+<div class="col-span-1 row-span-1 bg-primary/20"></div>
+<img class="col-span-1 row-span-2 w-full h-full object-cover" data-alt="A server room corridor filled with racks of powerful computing units. Rows of server blades emit a rhythmic blue light that reflects off the metallic and glass surfaces. The perspective is deep and symmetrical, creating a sense of infinite data processing power. The atmosphere is quiet, dark, and highly technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0s6fh2ODR_ibitjxwPm1dP_b5T3zEooH1x30xUtGpyhfacaiAAEvtb5HwNldcevMktCdYRl1-Wpcbz46cj5crVJdb6vrnWK6T2WH92jfmPY5OTzegVyFbRlYFNQokfM11EHBshCVgxH7VM6oDEOLp6uKZeWo2cCuAcSDaHVh1c8Hn7MDUle29o_knI5i2_-RZRZQcChTXC1CoKUA5vzJu4zC9KN35ihorZDVj_7Yxfiuyr8FegeLio7u7U0gn3-t2ue4aEmy6Cg"/>
+</div>
+<script>
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatHistory = document.getElementById('chat-history');
+    const fileUpload = document.getElementById('file-upload');
+    const uploadStatus = document.getElementById('upload-status');
+    const sessionId = "SID-77-B-0X42";
+
+    // --- CONFIGURATION MANAGEMENT ---
+    const defaultAppConfig = { theme: 'blue', model: 'gemini-2.5-flash', persona: 'cyber-brutalist', chunkSize: 1000 };
+    let appConfig = { ...defaultAppConfig };
+
+    function applyTheme() {
+        // Map theme colors to hue-rotate values based on the default Cobalt Blue (#007FFF)
+        const themeRotations = {
+            'blue': 'hue-rotate(0deg)',
+            'green': 'hue-rotate(-75deg)',
+            'amber': 'hue-rotate(-165deg)',
+            'crimson': 'hue-rotate(135deg)'
+        };
+        const mainContainer = document.querySelector('body');
+        mainContainer.style.filter = themeRotations[appConfig.theme] || themeRotations['blue'];
+    }
+
+    function loadConfig() {
+        const saved = localStorage.getItem('horizonbyte_config');
+        if (saved) {
+            appConfig = { ...defaultAppConfig, ...JSON.parse(saved) };
+        }
+        
+        // Update UI forms
+        document.querySelector(`input[name="theme"][value="${appConfig.theme}"]`).checked = true;
+        document.getElementById('config-model').value = appConfig.model;
+        document.getElementById('config-persona').value = appConfig.persona;
+        document.getElementById('config-chunk').value = appConfig.chunkSize;
+        
+        applyTheme();
+    }
+
+    function saveConfig() {
+        appConfig.theme = document.querySelector('input[name="theme"]:checked').value;
+        appConfig.model = document.getElementById('config-model').value;
+        appConfig.persona = document.getElementById('config-persona').value;
+        appConfig.chunkSize = parseInt(document.getElementById('config-chunk').value);
+        
+        localStorage.setItem('horizonbyte_config', JSON.stringify(appConfig));
+        applyTheme();
+        document.getElementById('config-modal').classList.add('hidden');
+    }
+
+    // Initialize Config
+    loadConfig();
+
+    const suggestionContainer = document.getElementById('suggestion-chips-container');
+    const filePreviewContainer = document.getElementById('file-preview-container');
+
+    async function fetchSuggestions() {
+        suggestionContainer.innerHTML = '<span class="text-outline text-xs">ANALYZING LOGS...</span>';
+        try {
+            const res = await fetch(`/api/suggestions?session_id=${sessionId}&model=${encodeURIComponent(appConfig.model)}`);
+            const data = await res.json();
+            suggestionContainer.innerHTML = '';
+            if (data.suggestions && data.suggestions.length > 0) {
+                data.suggestions.forEach(suggestion => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'font-code-sm text-code-sm text-primary px-md py-sm border border-primary/40 bg-primary/5 hover:bg-primary hover:text-on-primary hover:border-primary transition-all';
+                    btn.textContent = `[ ${suggestion} ]`;
+                    btn.onclick = () => {
+                        chatInput.value = suggestion;
+                        chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                    };
+                    suggestionContainer.appendChild(btn);
+                });
+            }
+        } catch (e) {
+            suggestionContainer.innerHTML = '';
+        }
+    }
+
+    // Initial fetch
+    fetchSuggestions();
+
+    function getTimeString() {
+        const now = new Date();
+        return now.toTimeString().split(' ')[0];
+    }
+
+    function appendMessage(role, text) {
+        const timeStr = getTimeString();
+        const msgDiv = document.createElement('div');
+        msgDiv.className = role === 'user' 
+            ? "flex gap-md group flex-row-reverse" 
+            : "flex gap-md group";
+        
+        let innerHTML = '';
+        if (role === 'user') {
+            innerHTML = `
+                <div class="w-10 h-10 bg-outline-variant/10 border border-outline-variant flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-outline">person</span>
+                </div>
+                <div class="flex-1 space-y-sm text-right">
+                    <div class="flex items-center gap-md justify-end">
+                        <span class="font-label-caps text-label-caps text-outline">T: ${timeStr}</span>
+                        <span class="font-label-caps text-label-caps text-outline">SYS_ROOT</span>
+                    </div>
+                    <div class="p-md bg-surface-container-highest border border-outline text-primary font-body-md inline-block text-left">
+                        ${text}
+                    </div>
+                </div>
+            `;
+        } else {
+            innerHTML = `
+                <div class="w-10 h-10 bg-primary/10 border border-primary flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-primary" style='font-variation-settings: "FILL" 1;'>smart_toy</span>
+                </div>
+                <div class="flex-1 space-y-sm">
+                    <div class="flex items-center gap-md">
+                        <span class="font-label-caps text-label-caps text-primary phosphor-glow">NEURAL_AI</span>
+                        <span class="font-label-caps text-label-caps text-outline">T: ${timeStr}</span>
+                    </div>
+                    <div class="p-md bg-surface-container-low border border-outline-variant text-on-surface font-body-md leading-relaxed whitespace-pre-wrap">
+                        ${text}
+                    </div>
+                </div>
+            `;
+        }
+        msgDiv.innerHTML = innerHTML;
+        chatHistory.appendChild(msgDiv);
+        chatHistory.parentElement.scrollTop = chatHistory.parentElement.scrollHeight;
+    }
+
+    const metricsLatency = document.getElementById('metrics-latency');
+    const metricsStatus = document.getElementById('metrics-status');
+    const statusProgress = document.getElementById('status-progress');
+    const statusIcon = document.getElementById('status-icon');
+
+    function setStatus(status, isProcessing = false) {
+        metricsStatus.textContent = status;
+        if (isProcessing) {
+            statusProgress.style.width = '100%';
+            statusProgress.style.transitionDuration = '3s';
+            statusIcon.classList.add('animate-pulse');
+        } else {
+            statusProgress.style.transitionDuration = '0s';
+            statusProgress.style.width = '0%';
+            statusIcon.classList.remove('animate-pulse');
+        }
+    }
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const query = chatInput.value.trim();
+        if (!query) return;
+
+        appendMessage('user', query);
+        chatInput.value = '';
+        suggestionContainer.innerHTML = ''; // Clear suggestions while fetching
+
+        setStatus('PROCESSING_QUERY', true);
+        const startTime = performance.now();
+
+        const formData = new FormData();
+        formData.append('query', query);
+        formData.append('session_id', sessionId);
+        formData.append('model', appConfig.model);
+        formData.append('persona', appConfig.persona);
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            const latency = ((performance.now() - startTime) / 1000).toFixed(2);
+            metricsLatency.textContent = latency + 's';
+            setStatus('STANDBY', false);
+
+            if (response.ok) {
+                appendMessage('bot', data.response);
+                fetchSuggestions();
+            } else {
+                appendMessage('bot', '[SYSTEM ERROR] ' + (data.detail || 'Unknown error'));
+            }
+        } catch (error) {
+            setStatus('ERROR', false);
+            appendMessage('bot', '[SYSTEM ERROR] Connection lost.');
+        }
+    });
+
+    fileUpload.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Show file preview
+        filePreviewContainer.innerHTML = `
+            <div class="bg-surface-variant text-on-surface font-code-sm text-[12px] px-sm py-xs border border-outline-variant flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[14px]">description</span>
+                ${file.name}
+            </div>
+        `;
+
+        uploadStatus.textContent = 'Uploading...';
+        uploadStatus.classList.remove('hidden');
+        setStatus('UPLOADING_DATA', true);
+
+        const startTime = performance.now();
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('session_id', sessionId);
+        formData.append('chunk_size', appConfig.chunkSize);
+
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            const latency = ((performance.now() - startTime) / 1000).toFixed(2);
+            metricsLatency.textContent = latency + 's';
+            setStatus('STANDBY', false);
+
+            if (response.ok) {
+                uploadStatus.textContent = '[SUCCESS] ' + data.message;
+                fetchSuggestions();
+            } else {
+                uploadStatus.textContent = '[ERROR] ' + (data.detail || 'Upload failed');
+            }
+        } catch (error) {
+            setStatus('ERROR', false);
+            uploadStatus.textContent = '[ERROR] Connection lost.';
+        }
+        
+        setTimeout(() => {
+            uploadStatus.classList.add('hidden');
+        }, 5000);
+    });
+
+    const rephraseBtn = document.getElementById('rephrase-btn');
+    const rephraseTone = document.getElementById('rephrase-tone');
+    let rephraseMode = false;
+
+    rephraseBtn.addEventListener('click', async () => {
+        const query = chatInput.value.trim();
+        
+        if (!rephraseMode) {
+            // Turn ON rephrase mode
+            rephraseMode = true;
+            rephraseBtn.classList.add('text-primary');
+            rephraseTone.classList.remove('hidden');
+        } else {
+            // If empty, just turn it off
+            if (!query) {
+                rephraseMode = false;
+                rephraseBtn.classList.remove('text-primary');
+                rephraseTone.classList.add('hidden');
+                return;
+            }
+
+            // Perform rephrase
+            rephraseBtn.classList.add('animate-pulse');
+            const formData = new FormData();
+            formData.append('text', query);
+            formData.append('tone', rephraseTone.value);
+            formData.append('model', appConfig.model);
+
+            try {
+                const response = await fetch('/api/rephrase', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    chatInput.value = data.rephrased_text;
+                    // Turn off after successful rephrase
+                    rephraseMode = false;
+                    rephraseBtn.classList.remove('text-primary');
+                    rephraseTone.classList.add('hidden');
+                } else {
+                    console.error('[REPHRASE ERROR]', data.detail);
+                }
+            } catch (error) {
+                console.error('[REPHRASE ERROR] Connection lost.', error);
+            } finally {
+                rephraseBtn.classList.remove('animate-pulse');
+            }
+        }
+    });
+</script>
+</body></html>
