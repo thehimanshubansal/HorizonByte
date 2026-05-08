@@ -68,7 +68,7 @@ HorizonByte can be easily deployed as a Web Service on platforms like Render:
 1. Connect your repository to Render.
 2. Select **Python 3** as the runtime environment.
 3. Set Build Command: `pip install -r requirements.txt`
-4. Set Start Command: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+4. Set Start Command: `uvicorn backend.main:app --host 0.0.0.0 --port 10000`
 5. Add your `GEMINI_API_KEY` to the Environment Variables tab.
 6. Deploy!
 
