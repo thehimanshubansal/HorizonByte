@@ -53,7 +53,7 @@ async def upload_document(
 async def chat(
     query: str = Form(...), 
     session_id: str = Form("SID-77-B-0X42"),
-    model: str = Form("gemini-2.5-flash"),
+    model: str = Form("gemini-2.5-flash-lite"),
     persona: str = Form("cyber-brutalist")
 ):
     # 1. Retrieve history
@@ -77,7 +77,7 @@ async def chat(
 @app.get("/api/suggestions")
 async def get_suggestions(
     session_id: str = "SID-77-B-0X42",
-    model: str = "gemini-2.5-flash"
+    model: str = "gemini-2.5-flash-lite"
 ):
     summary = memory.get_document_summary(session_id)
     history = memory.get_context(session_id)
@@ -88,7 +88,7 @@ async def get_suggestions(
 async def rephrase(
     text: str = Form(...),
     tone: str = Form("Professional"),
-    model: str = Form("gemini-2.5-flash")
+    model: str = Form("gemini-2.5-flash-lite")
 ):
     rephrased = rephrase_text(text, tone, model_name=model)
     return {"rephrased_text": rephrased}

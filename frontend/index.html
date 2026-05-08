@@ -2,7 +2,9 @@
 
 <html class="dark" lang="en" style=""><head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>HorizonByte</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
@@ -72,6 +74,16 @@
             background: #007FFF;
             border-radius: 0px;
         }
+        /* iOS dynamic viewport height — input stays above keyboard */
+        @supports (height: 100dvh) {
+            .h-screen { height: 100dvh !important; }
+        }
+        /* iOS safe-area for notch/home-indicator */
+        footer {
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+        }
+        /* Prevent iOS double-tap zoom on buttons */
+        button, label, a { touch-action: manipulation; }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -181,7 +193,14 @@
 <a class="font-code-sm text-code-sm uppercase tracking-widest text-outline hover:text-primary transition-all duration-75 cursor-pointer" onclick="document.getElementById('about-modal').classList.remove('hidden')">ABOUT</a>
 <a class="font-code-sm text-code-sm uppercase tracking-widest text-outline hover:text-primary transition-all duration-75 cursor-pointer" onclick="document.getElementById('config-modal').classList.remove('hidden')">CONFIG</a>
 </nav>
-<div class="flex items-center gap-md shrink-0">
+<div class="flex items-center gap-sm shrink-0">
+<!-- Mobile-only About/Config icon buttons -->
+<button class="flex lg:hidden p-sm text-outline hover:text-primary active:scale-95 transition-all" onclick="document.getElementById('about-modal').classList.remove('hidden')" title="About">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</button>
+<button class="flex lg:hidden p-sm text-outline hover:text-primary active:scale-95 transition-all" onclick="document.getElementById('config-modal').classList.remove('hidden')" title="Config">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
 <button class="p-sm text-primary hover:bg-primary hover:text-on-primary transition-all duration-75 active:scale-95">
 <span class="material-symbols-outlined">terminal</span>
 </button>
@@ -189,15 +208,15 @@
 </div>
 </header>
 <!-- Chat Content Area -->
-<section class="flex-1 overflow-y-auto p-lg custom-scrollbar">
+<section class="flex-1 overflow-y-auto p-sm sm:p-lg custom-scrollbar">
 <!-- Branding Header -->
-<div class="max-w-4xl mx-auto mt-xl mb-xl text-center">
+<div class="max-w-4xl mx-auto mt-md mb-md sm:mt-xl sm:mb-xl text-center">
 <div class="inline-block border border-primary p-md mb-md bg-primary/5">
-<span class="material-symbols-outlined text-[48px] text-primary phosphor-glow">wb_sunny</span>
+<span class="material-symbols-outlined text-[36px] sm:text-[48px] text-primary phosphor-glow">wb_sunny</span>
 </div>
-<h2 class="font-display text-display text-primary phosphor-glow mb-sm">HorizonByte v1.0</h2>
+<h2 class="font-h1 text-h1 sm:font-display sm:text-display text-primary phosphor-glow mb-sm">HorizonByte v1.0</h2>
 <p class="font-code-sm text-code-sm text-outline max-w-lg mx-auto">A RAG System by HIMANSHU BANSAL</p>
-</div><div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-md mb-xl">
+</div><div class="max-w-4xl mx-auto grid grid-cols-3 gap-sm sm:gap-md mb-md sm:mb-xl">
 <div class="p-md border border-primary/20 bg-primary/5 relative overflow-hidden group">
 <div class="font-label-caps text-label-caps text-outline mb-xs relative z-10">RESPONSE_TIME</div>
 <div id="metrics-latency" class="font-code-sm text-body-lg text-primary phosphor-glow relative z-10">0.00s</div>
@@ -231,19 +250,16 @@
 </div>
 </section>
 <!-- Input Bar -->
-<footer class="p-lg border-t border-outline-variant bg-surface-container-lowest">
-<form id="chat-form" class="max-w-4xl mx-auto relative mt-md">
+<footer class="p-sm sm:p-lg border-t border-outline-variant bg-surface-container-lowest">
+<form id="chat-form" class="max-w-4xl mx-auto relative mt-0 sm:mt-md">
 <div id="file-preview-container" class="absolute -top-12 left-0 flex gap-sm">
     <!-- File chips will appear here -->
 </div>
 <div class="absolute left-md top-1/2 -translate-y-1/2 flex items-center gap-sm pointer-events-none">
 <span class="text-primary font-code-sm text-code-sm phosphor-glow">&gt;</span>
 </div>
-<input id="chat-input" class="w-full bg-background border border-outline-variant py-md pl-xl pr-[160px] text-primary font-code-sm focus:border-primary focus:ring-0 placeholder:text-outline/40" placeholder="Enter queries, write your thoughts, etc" type="text" required/>
-<div class="absolute right-md top-1/2 -translate-y-1/2 flex items-center gap-md">
-<button type="button" class="p-xs text-outline hover:text-primary transition-colors">
-<span class="material-symbols-outlined text-[20px]">mic</span>
-</button>
+<input id="chat-input" class="w-full bg-background border border-outline-variant py-md pl-xl pr-[136px] sm:pr-[152px] text-primary font-code-sm focus:border-primary focus:ring-0 placeholder:text-outline/40" placeholder="Enter queries, write your thoughts, etc" type="text" required/>
+<div class="absolute right-md top-1/2 -translate-y-1/2 flex items-center gap-sm sm:gap-md">
 <select id="rephrase-tone" class="hidden bg-surface-container-low border border-outline-variant text-primary font-code-sm text-[12px] p-xs focus:border-primary focus:ring-0">
     <option value="Professional">Professional</option>
     <option value="Casual">Casual</option>
@@ -263,7 +279,7 @@
 </div>
 </form>
 <div id="upload-status" class="max-w-4xl mx-auto mt-2 text-primary font-code-sm text-xs hidden">Uploading...</div>
-<div class="max-w-4xl mx-auto mt-sm flex justify-between px-xs">
+<div class="hidden sm:flex max-w-4xl mx-auto mt-sm justify-between px-xs">
 <span class="font-label-caps text-label-caps text-outline">HORIZON_ENGINE_ACTIVE</span>
 <span class="font-label-caps text-label-caps text-outline">RAG_DATALINK // ENCRYPTED</span>
 </div>
@@ -271,8 +287,8 @@
 </main>
 </div>
 <!-- About Modal -->
-<div id="about-modal" class="hidden absolute inset-0 z-50 bg-background/90 flex items-center justify-center p-lg backdrop-blur-sm">
-    <div class="max-w-2xl w-full bg-surface-container-low border border-primary p-xl relative shadow-[0_0_20px_rgba(0,127,255,0.2)]">
+<div id="about-modal" class="hidden absolute inset-0 z-50 bg-background/90 flex items-start sm:items-center justify-center p-sm sm:p-lg backdrop-blur-sm overflow-y-auto">
+    <div class="max-w-2xl w-full bg-surface-container-low border border-primary p-md sm:p-xl relative shadow-[0_0_20px_rgba(0,127,255,0.2)] my-auto">
         <button onclick="document.getElementById('about-modal').classList.add('hidden')" class="absolute top-md right-md text-outline hover:text-primary"><span class="material-symbols-outlined">close</span></button>
         <h2 class="text-h2 font-h2 text-primary mb-md phosphor-glow flex items-center gap-sm"><span class="material-symbols-outlined">info</span> ABOUT HORIZONBYTE</h2>
         <div class="font-body-md text-on-surface space-y-md leading-relaxed">
@@ -285,8 +301,8 @@
 </div>
 
 <!-- Config Modal -->
-<div id="config-modal" class="hidden absolute inset-0 z-50 bg-background/90 flex items-center justify-center p-lg backdrop-blur-sm">
-    <div class="max-w-2xl w-full bg-surface-container-low border border-primary p-xl relative shadow-[0_0_20px_rgba(0,127,255,0.2)]">
+<div id="config-modal" class="hidden absolute inset-0 z-50 bg-background/90 flex items-start sm:items-center justify-center p-sm sm:p-lg backdrop-blur-sm overflow-y-auto">
+    <div class="max-w-2xl w-full bg-surface-container-low border border-primary p-md sm:p-xl relative shadow-[0_0_20px_rgba(0,127,255,0.2)] my-auto">
         <button onclick="document.getElementById('config-modal').classList.add('hidden')" class="absolute top-md right-md text-outline hover:text-primary"><span class="material-symbols-outlined">close</span></button>
         <h2 class="text-h2 font-h2 text-primary mb-lg phosphor-glow flex items-center gap-sm"><span class="material-symbols-outlined">settings</span> SYSTEM CONFIGURATION</h2>
         
@@ -515,6 +531,49 @@
         const query = chatInput.value.trim();
         if (!query) return;
 
+        // --- REPHRASE MODE: Send button triggers the rephrase API ---
+        if (rephraseMode) {
+            const tone = rephraseTone.value;
+            appendMessage('user', `[REPHRASE → ${tone.toUpperCase()}] ${query}`);
+            chatInput.value = '';
+            chatInput.placeholder = 'Enter queries, write your thoughts, etc';
+
+            // Deactivate rephrase mode immediately
+            rephraseMode = false;
+            rephraseBtn.classList.remove('text-primary');
+            rephraseTone.classList.add('hidden');
+
+            setStatus('REPHRASING', true);
+            const startTime = performance.now();
+
+            const formData = new FormData();
+            formData.append('text', query);
+            formData.append('tone', tone);
+            formData.append('model', appConfig.model);
+
+            try {
+                const response = await fetch('/api/rephrase', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                const latency = ((performance.now() - startTime) / 1000).toFixed(2);
+                metricsLatency.textContent = latency + 's';
+                setStatus('STANDBY', false);
+
+                if (response.ok) {
+                    appendMessage('bot', data.rephrased_text);
+                } else {
+                    appendMessage('bot', '[REPHRASE ERROR] ' + (data.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                setStatus('ERROR', false);
+                appendMessage('bot', '[SYSTEM ERROR] Connection lost.');
+            }
+            return; // Stop here — do not proceed to normal chat
+        }
+
+        // --- NORMAL CHAT MODE ---
         appendMessage('user', query);
         chatInput.value = '';
         suggestionContainer.innerHTML = ''; // Clear suggestions while fetching
@@ -604,50 +663,20 @@
     const rephraseTone = document.getElementById('rephrase-tone');
     let rephraseMode = false;
 
-    rephraseBtn.addEventListener('click', async () => {
-        const query = chatInput.value.trim();
-        
+    rephraseBtn.addEventListener('click', () => {
         if (!rephraseMode) {
-            // Turn ON rephrase mode
+            // Activate rephrase mode — Send button will now trigger the API
             rephraseMode = true;
             rephraseBtn.classList.add('text-primary');
             rephraseTone.classList.remove('hidden');
+            chatInput.placeholder = 'Type Hinglish text, then press Send to rephrase...';
+            chatInput.focus();
         } else {
-            // If empty, just turn it off
-            if (!query) {
-                rephraseMode = false;
-                rephraseBtn.classList.remove('text-primary');
-                rephraseTone.classList.add('hidden');
-                return;
-            }
-
-            // Perform rephrase
-            rephraseBtn.classList.add('animate-pulse');
-            const formData = new FormData();
-            formData.append('text', query);
-            formData.append('tone', rephraseTone.value);
-            formData.append('model', appConfig.model);
-
-            try {
-                const response = await fetch('/api/rephrase', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    chatInput.value = data.rephrased_text;
-                    // Turn off after successful rephrase
-                    rephraseMode = false;
-                    rephraseBtn.classList.remove('text-primary');
-                    rephraseTone.classList.add('hidden');
-                } else {
-                    console.error('[REPHRASE ERROR]', data.detail);
-                }
-            } catch (error) {
-                console.error('[REPHRASE ERROR] Connection lost.', error);
-            } finally {
-                rephraseBtn.classList.remove('animate-pulse');
-            }
+            // Deactivate rephrase mode
+            rephraseMode = false;
+            rephraseBtn.classList.remove('text-primary');
+            rephraseTone.classList.add('hidden');
+            chatInput.placeholder = 'Enter queries, write your thoughts, etc';
         }
     });
 </script>
