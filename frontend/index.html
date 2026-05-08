@@ -515,6 +515,49 @@
         const query = chatInput.value.trim();
         if (!query) return;
 
+        // --- REPHRASE MODE: Send button triggers the rephrase API ---
+        if (rephraseMode) {
+            const tone = rephraseTone.value;
+            appendMessage('user', `[REPHRASE → ${tone.toUpperCase()}] ${query}`);
+            chatInput.value = '';
+            chatInput.placeholder = 'Enter queries, write your thoughts, etc';
+
+            // Deactivate rephrase mode immediately
+            rephraseMode = false;
+            rephraseBtn.classList.remove('text-primary');
+            rephraseTone.classList.add('hidden');
+
+            setStatus('REPHRASING', true);
+            const startTime = performance.now();
+
+            const formData = new FormData();
+            formData.append('text', query);
+            formData.append('tone', tone);
+            formData.append('model', appConfig.model);
+
+            try {
+                const response = await fetch('/api/rephrase', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                const latency = ((performance.now() - startTime) / 1000).toFixed(2);
+                metricsLatency.textContent = latency + 's';
+                setStatus('STANDBY', false);
+
+                if (response.ok) {
+                    appendMessage('bot', data.rephrased_text);
+                } else {
+                    appendMessage('bot', '[REPHRASE ERROR] ' + (data.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                setStatus('ERROR', false);
+                appendMessage('bot', '[SYSTEM ERROR] Connection lost.');
+            }
+            return; // Stop here — do not proceed to normal chat
+        }
+
+        // --- NORMAL CHAT MODE ---
         appendMessage('user', query);
         chatInput.value = '';
         suggestionContainer.innerHTML = ''; // Clear suggestions while fetching
@@ -604,50 +647,20 @@
     const rephraseTone = document.getElementById('rephrase-tone');
     let rephraseMode = false;
 
-    rephraseBtn.addEventListener('click', async () => {
-        const query = chatInput.value.trim();
-        
+    rephraseBtn.addEventListener('click', () => {
         if (!rephraseMode) {
-            // Turn ON rephrase mode
+            // Activate rephrase mode — Send button will now trigger the API
             rephraseMode = true;
             rephraseBtn.classList.add('text-primary');
             rephraseTone.classList.remove('hidden');
+            chatInput.placeholder = 'Type Hinglish text, then press Send to rephrase...';
+            chatInput.focus();
         } else {
-            // If empty, just turn it off
-            if (!query) {
-                rephraseMode = false;
-                rephraseBtn.classList.remove('text-primary');
-                rephraseTone.classList.add('hidden');
-                return;
-            }
-
-            // Perform rephrase
-            rephraseBtn.classList.add('animate-pulse');
-            const formData = new FormData();
-            formData.append('text', query);
-            formData.append('tone', rephraseTone.value);
-            formData.append('model', appConfig.model);
-
-            try {
-                const response = await fetch('/api/rephrase', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    chatInput.value = data.rephrased_text;
-                    // Turn off after successful rephrase
-                    rephraseMode = false;
-                    rephraseBtn.classList.remove('text-primary');
-                    rephraseTone.classList.add('hidden');
-                } else {
-                    console.error('[REPHRASE ERROR]', data.detail);
-                }
-            } catch (error) {
-                console.error('[REPHRASE ERROR] Connection lost.', error);
-            } finally {
-                rephraseBtn.classList.remove('animate-pulse');
-            }
+            // Deactivate rephrase mode
+            rephraseMode = false;
+            rephraseBtn.classList.remove('text-primary');
+            rephraseTone.classList.add('hidden');
+            chatInput.placeholder = 'Enter queries, write your thoughts, etc';
         }
     });
 </script>
