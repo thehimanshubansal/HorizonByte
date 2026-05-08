@@ -4,4 +4,3 @@ PyMuPDF
 faiss-cpu
 google-generativeai
 python-multipart
-sentence-transformers
