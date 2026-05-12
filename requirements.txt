@@ -4,3 +4,8 @@ PyMuPDF
 faiss-cpu
 google-generativeai
 python-multipart
+ragas
+datasets
+pandas
+rapidfuzz
+jsonref

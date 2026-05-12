@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html class="dark" lang="en" style=""><head>
+<html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <meta name="mobile-web-app-capable" content="yes">
@@ -293,7 +293,7 @@
         <h2 class="text-h2 font-h2 text-primary mb-md phosphor-glow flex items-center gap-sm"><span class="material-symbols-outlined">info</span> ABOUT HORIZONBYTE</h2>
         <div class="font-body-md text-on-surface space-y-md leading-relaxed">
             <p>HorizonByte is a cutting-edge Neural AI Assistant engineered from the ground up with a custom <strong>Retrieval-Augmented Generation (RAG)</strong> architecture.</p>
-            <p>Unlike generic AI platforms, HorizonByte ditches bloated frameworks for raw, high-performance Python processing. It utilizes recursive semantic chunking and FAISS vector indices to ensure context accuracy, driven by the bleeding-edge <span class="text-primary">Gemini 2.5 Flash</span> model.</p>
+            <p>Unlike generic AI platforms, HorizonByte ditches bloated frameworks for raw, high-performance Python processing. It utilizes recursive semantic chunking and FAISS vector indices to ensure context accuracy, driven by the latest <span class="text-primary">Gemini 1.5 & 2.0</span> models.</p>
             <p><strong>Design Philosophy:</strong> Rooted in Cyber-Brutalist aesthetics, HorizonByte prioritizes information density, functional rigidity, and surgical precision over organic flourishes. Total technical control in a high-bandwidth terminal.</p>
             <p><strong>Rephrase Engine:</strong> Embedded within the command interface is a specialized Hinglish-to-English translation module. It interprets natural thoughts typed in Hinglish and restructures them into formal, professional, or casual English tone, allowing writers to express raw concepts and refine them for presentation seamlessly.</p>
         </div>
@@ -335,8 +335,9 @@
                 <div>
                     <label class="block font-label-caps text-label-caps text-outline mb-sm">NEURAL CORE (MODEL)</label>
                     <select id="config-model" class="w-full bg-surface border border-outline-variant p-sm text-primary font-code-sm focus:border-primary focus:ring-0">
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast)</option>
-                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Reasoning)</option>
+                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (High-volume, Low-latency tasks)</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Complex Reasoning)</option>
+                        <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash-Lite Preview (Lightweight, fast model)</option>
                     </select>
                 </div>
                 
@@ -385,7 +386,7 @@
     const sessionId = "SID-77-B-0X42";
 
     // --- CONFIGURATION MANAGEMENT ---
-    const defaultAppConfig = { theme: 'blue', model: 'gemini-2.5-flash', persona: 'cyber-brutalist', chunkSize: 1000 };
+    const defaultAppConfig = { theme: 'blue', model: 'gemini-2.5-flash-lite', persona: 'cyber-brutalist', chunkSize: 1000 };
     let appConfig = { ...defaultAppConfig };
 
     function applyTheme() {

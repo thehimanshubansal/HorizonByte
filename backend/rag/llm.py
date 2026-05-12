@@ -22,7 +22,7 @@ def generate_response(query: str, retrieved_context: list[str], chat_history: st
     
     prompt = f"""You are HorizonByte, an advanced neural AI assistant in a cyber-terminal environment.
 Your personality is {personality_desc}.
-Answer the user's question based on the provided context. If the context does not contain the answer, state that there is insufficient data.
+Answer the user's question based on the provided context. If the context is provided but doesn't contain the answer, or if the context is missing and the query specifically asks about a document, state that there is insufficient data. Otherwise, answer to the best of your ability.
 
 DOCUMENT CONTEXT:
 {context_str}
@@ -45,7 +45,7 @@ AI RESPONSE:"""
 
 import json
 
-def generate_suggestions(context_summary: str, chat_history: str, model_name: str = "gemini-2.5-flash") -> list[str]:
+def generate_suggestions(context_summary: str, chat_history: str, model_name: str = "gemini-2.5-flash-lite") -> list[str]:
     if not api_key:
         return ["System status kya hai?", "Pichla task dikhao", "Data analyze karo", "Mujhe summary chahiye"]
         
@@ -77,7 +77,7 @@ JSON ARRAY OF 4 SUGGESTIONS:"""
         # Fallback to static if it fails
         return ["System status kya hai?", "Pichla task dikhao", "Data analyze karo", "Mujhe summary chahiye"]
 
-def rephrase_text(text: str, tone: str, model_name: str = "gemini-2.5-flash") -> str:
+def rephrase_text(text: str, tone: str, model_name: str = "gemini-2.5-flash-lite") -> str:
     if not api_key:
         return "ERROR: GEMINI_API_KEY environment variable is not set."
         
