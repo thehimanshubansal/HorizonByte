@@ -1,6 +1,8 @@
-# HorizonByte — Complete Project Guide
+# HorizonByte : Complete Project Guide
 
-### 1. 🔭 Project Overview (Elevator Pitch)
+### 1. 🔭 Project Overview
+
+[![Production Link](https://img.shields.io/badge/MVP-HorizonByte_on_render-green)](https://horizonbyte.onrender.com)
 
 **HorizonByte** is a full-stack, document-aware AI chatbot built from scratch without any high-level AI framework like LangChain or LlamaIndex. It implements a custom **Retrieval-Augmented Generation (RAG)** pipeline using:
 
