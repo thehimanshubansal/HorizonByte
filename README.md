@@ -28,7 +28,7 @@ HorizonByte/
 │   └── rag/
 │       ├── ingestion.py     # PDF/TXT → raw text
 │       ├── chunking.py      # Recursive text splitter
-│       ├── vector_store.py  # FAISS wrapper + Llama 3.3 embeddings
+│       ├── vector_store.py  # FAISS wrapper + embeddings
 │       ├── memory.py        # TTL-based session memory
 │       └── llm.py           # LLM calls: chat, suggestions, rephrase
 ├── frontend/
@@ -361,7 +361,7 @@ Instead of a standard LLM API, HorizonByte uses Cloudflare's serverless AI infer
 
 2. **Custom Recursive Chunker** — Mirrors the algorithm used in production frameworks but without the dependency.
 
-3. **Dual Embedding Strategy** — Uses `task_type="retrieval_document"` for indexing and `task_type="retrieval_query"` for querying. This is an Llama 3.3 API best practice for better retrieval accuracy.
+3. **Dual Embedding Strategy** — Uses `task_type="retrieval_document"` for indexing and `task_type="retrieval_query"` for querying. This is best practice for better retrieval accuracy.
 
 4. **Monolith Deployment Pattern** — Clever use of FastAPI to serve both the API and the static frontend from one process — no separate frontend server, no CORS issues.
 
