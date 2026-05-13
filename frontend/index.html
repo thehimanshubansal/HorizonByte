@@ -178,15 +178,16 @@
         }
     </script>
 </head>
-<body class="bg-background text-primary font-body-md overflow-hidden crt-screen h-screen">
+<body class="bg-background text-primary font-body-md overflow-x-hidden overflow-y-auto crt-screen min-h-screen">
 <div class="crt-overlay"></div>
 <div class="crt-scanline"></div>
 <div class="flex h-full w-full relative z-10">
 <!-- Main Workspace -->
 <main class="flex-1 flex flex-col h-full bg-background relative border-glow">
 <!-- TopAppBar Component -->
-<header class="flex items-center w-full px-lg h-16 border-b border-outline-variant flex-shrink-0 bg-background">
-  <div class="flex items-center w-full relative">
+<header class="flex items-center w-full px-lg h-16 border-b border-outline-variant flex-shrink-0 bg-background relative">
+  <!-- Grid layout ensures perfect centering of the middle element -->
+  <div class="grid grid-cols-[auto_1fr_auto] items-center w-full">
     
     <!-- 1. Left: Brand -->
     <h1 class="text-h2 font-h2 font-bold text-primary tracking-tighter phosphor-glow shrink-0">
@@ -194,15 +195,14 @@
     </h1>
 
     <!-- 2. Desktop Nav (Centered) -->
-    <nav class="hidden lg:flex flex-1 justify-center items-center gap-lg">
+    <nav class="hidden lg:flex justify-center items-center gap-lg">
       <a class="font-code-sm text-code-sm uppercase tracking-widest text-primary border-b-2 border-primary pb-1" href="#">TERMINAL</a>
       <a class="font-code-sm text-code-sm uppercase tracking-widest text-outline hover:text-primary transition-all duration-75 cursor-pointer" onclick="document.getElementById('about-modal').classList.remove('hidden')">ABOUT</a>
       <a class="font-code-sm text-code-sm uppercase tracking-widest text-outline hover:text-primary transition-all duration-75 cursor-pointer" onclick="document.getElementById('config-modal').classList.remove('hidden')">CONFIG</a>
     </nav>
 
-    <!-- 3. Mobile Icons (Absolute Center) -->
-    <!-- This div only appears on mobile and stays in the exact center of the header -->
-    <div class="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center gap-sm">
+    <!-- 3. Mobile Icons (Absolute Center via Grid) -->
+    <div class="lg:hidden flex items-center justify-center gap-sm">
       <button class="p-sm text-outline hover:text-primary active:scale-95 transition-all" onclick="document.getElementById('about-modal').classList.remove('hidden')" title="About">
         <span class="material-symbols-outlined text-[20px]">info</span>
       </button>
@@ -212,7 +212,7 @@
     </div>
 
     <!-- 4. Right: Terminal Button -->
-    <div class="flex-1 flex justify-end">
+    <div class="flex justify-end">
       <button class="p-sm text-primary hover:bg-primary hover:text-on-primary transition-all duration-75 active:scale-95">
         <span class="material-symbols-outlined">terminal</span>
       </button>
