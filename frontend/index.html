@@ -74,6 +74,16 @@
             background: #007FFF;
             border-radius: 0px;
         }
+        .h-[dvh] { height: 100dvh; }
+        section {
+            display: flex;
+            flex-direction: column;
+        }
+        #chat-history {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Messages stack from top */
+        }
         /* iOS dynamic viewport height — input stays above keyboard */
         @supports (height: 100dvh) {
             .h-screen { height: 100dvh !important; }
@@ -178,14 +188,14 @@
         }
     </script>
 </head>
-<body class="bg-background text-primary font-body-md overflow-x-hidden overflow-y-auto crt-screen min-h-screen">
+<body class="bg-background text-primary font-body-md overflow-x-hidden overflow-y-auto crt-screen h-[dvh] flex flex-col">
 <div class="crt-overlay"></div>
 <div class="crt-scanline"></div>
-<div class="flex h-full w-full relative z-10">
+<div class="flex flex-col flex-1 h-full relative z-10 overflow-hidden">
 <!-- Main Workspace -->
-<main class="flex-1 flex flex-col h-full bg-background relative border-glow">
+<main class="flex-1 flex flex-col h-full bg-background relative border-glow overflow-hidden">
 <!-- TopAppBar Component -->
-<header class="flex items-center w-full px-lg h-16 border-b border-outline-variant flex-shrink-0 bg-background relative">
+<header class="flex-none items-center w-full px-lg h-16 border-b border-outline-variant flex-shrink-0 bg-background relative">
   <!-- Grid layout ensures perfect centering of the middle element -->
   <div class="grid grid-cols-[auto_1fr_auto] items-center w-full">
     
@@ -264,7 +274,7 @@
 </div>
 </section>
 <!-- Input Bar -->
-<footer class="p-sm sm:p-lg border-t border-outline-variant bg-surface-container-lowest">
+<footer class="flex-none p-sm sm:p-lg border-t border-outline-variant bg-surface-container-lowest">
 <form id="chat-form" class="max-w-4xl mx-auto relative mt-0 sm:mt-md">
 <div id="file-preview-container" class="absolute -top-12 left-0 flex gap-sm">
     <!-- File chips will appear here -->
@@ -301,7 +311,7 @@
 </main>
 </div>
 <!-- About Modal -->
-<div id="about-modal" class="hidden absolute inset-0 z-50 bg-background/90 flex items-start sm:items-center justify-center p-sm sm:p-lg backdrop-blur-sm overflow-y-auto">
+<div id="about-modal" class="hidden fixed inset-0 z-50 bg-background/90 flex items-start sm:items-center justify-center p-sm sm:p-lg backdrop-blur-sm overflow-y-auto">
     <div class="max-w-2xl w-full bg-surface-container-low border border-primary p-md sm:p-xl relative shadow-[0_0_20px_rgba(0,127,255,0.2)] my-auto">
         <button onclick="document.getElementById('about-modal').classList.add('hidden')" class="absolute top-md right-md text-outline hover:text-primary"><span class="material-symbols-outlined">close</span></button>
         <h2 class="text-h2 font-h2 text-primary mb-md phosphor-glow flex items-center gap-sm"><span class="material-symbols-outlined">info</span> ABOUT HORIZONBYTE</h2>
@@ -315,7 +325,7 @@
 </div>
 
 <!-- Config Modal -->
-<div id="config-modal" class="hidden absolute inset-0 z-50 bg-background/90 flex items-start sm:items-center justify-center p-sm sm:p-lg backdrop-blur-sm overflow-y-auto">
+<div id="config-modal" class="hidden fixed inset-0 z-50 bg-background/90 flex items-start sm:items-center justify-center p-sm sm:p-lg backdrop-blur-sm overflow-y-auto">
     <div class="max-w-2xl w-full bg-surface-container-low border border-primary p-md sm:p-xl relative shadow-[0_0_20px_rgba(0,127,255,0.2)] my-auto">
         <button onclick="document.getElementById('config-modal').classList.add('hidden')" class="absolute top-md right-md text-outline hover:text-primary"><span class="material-symbols-outlined">close</span></button>
         <h2 class="text-h2 font-h2 text-primary mb-lg phosphor-glow flex items-center gap-sm"><span class="material-symbols-outlined">settings</span> SYSTEM CONFIGURATION</h2>

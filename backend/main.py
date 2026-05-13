@@ -25,6 +25,11 @@ async def upload_document(
     session_id: str = Form("SID-77-B-0X42"),
     chunk_size: int = Form(1000)
 ):
+    
+    # Clear old data from memory so new chunk size applies to fresh state
+    vector_store.index.reset() 
+    vector_store.chunk_map.clear()
+
     if not file.filename.endswith(('.pdf', '.txt')):
         raise HTTPException(status_code=400, detail="Only PDF and TXT files are supported.")
         
@@ -33,6 +38,10 @@ async def upload_document(
         shutil.copyfileobj(file.file, buffer)
         
     try:
+
+        # 0. VectorStore is fresh for the new document
+        vector_store.reset_store()
+
         # 1. Ingest
         raw_text = load_document(file_path)
         

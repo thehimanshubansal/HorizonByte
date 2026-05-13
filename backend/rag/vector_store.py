@@ -55,6 +55,9 @@ class VectorStore:
         except Exception as e:
             print(f"Error during similarity search: {e}")
             return[]
+    def reset_store(self):
+        self.index = faiss.IndexFlatL2(self.dimension)
+        self.chunk_map = {}
 
 # Global instance for the server
 vector_store = VectorStore()
