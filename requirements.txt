@@ -1,11 +1,16 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Web
 fastapi
 uvicorn
-PyMuPDF
-faiss-cpu
-google-generativeai
 python-multipart
-ragas
-datasets
-pandas
-rapidfuzz
-jsonref
+
+# AI / ML Models
+torch
+sentence-transformers
+faiss-cpu
+
+# Utilities
+PyMuPDF
+requests
+python-dotenv

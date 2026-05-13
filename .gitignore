@@ -1,2 +1,3 @@
 backend/evaluate_rag.py
 data/Gsoc_Propasal_2026.pdf
+.env

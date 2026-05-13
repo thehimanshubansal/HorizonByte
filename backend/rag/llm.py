@@ -1,16 +1,42 @@
-import google.generativeai as genai
+import requests
+import json
 import os
+import re
+from dotenv import load_dotenv
 
-# Ensure the user sets GEMINI_API_KEY
-api_key = os.environ.get("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
+# Load environment variables from .env file
+load_dotenv()
 
-def generate_response(query: str, retrieved_context: list[str], chat_history: str, model_name: str = "gemini-2.5-flash-lite", persona: str = "cyber-brutalist") -> str:
-    if not api_key:
-        return "ERROR: GEMINI_API_KEY environment variable is not set. Please set it to proceed."
-        
-    context_str = "\n\n---\n\n".join(retrieved_context)
+# Pure Cloudflare Configurations
+cf_account_id = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
+cf_api_token = os.environ.get("CLOUDFLARE_API_TOKEN")
+
+def call_cloudflare_ai(prompt: str, model: str = "@cf/meta/llama-3.3-70b-instruct-fp8-fast") -> str:
+    """Core function to call Cloudflare Workers AI."""
+    if not cf_account_id or not cf_api_token:
+        return "[SYSTEM ERROR] Cloudflare credentials missing (CLOUDFLARE_ACCOUNT_ID or CLOUDFLARE_API_TOKEN)."
+    
+    url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account_id}/ai/run/{model}"
+    headers = {"Authorization": f"Bearer {cf_api_token}"}
+    payload = {
+        "messages": [
+            {"role": "system", "content": "You are HorizonByte, an advanced neural AI assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+        if result.get("success"):
+            return result["result"]["response"].strip()
+        return f"[SYSTEM ERROR] Cloudflare API error: {result.get('errors')}"
+    except Exception as e:
+        return f"[SYSTEM ERROR] Could not connect to Cloudflare: {str(e)}"
+
+def generate_response(query: str, retrieved_context: list[str], chat_history: str, model_name: str = "@cf/meta/llama-3.3-70b-instruct-fp8-fast", persona: str = "cyber-brutalist") -> str:
+    context_str = "\n\n---\n\n".join(retrieved_context) if retrieved_context else ""
     
     # Map persona string to description
     persona_mapping = {
@@ -27,7 +53,7 @@ Answer the user's question based on the provided context. If the context is prov
 DOCUMENT CONTEXT:
 {context_str}
 
-RECENT CHAT HISTORY (Last 5 minutes):
+RECENT CHAT HISTORY:
 {chat_history}
 
 USER QUERY:
@@ -35,24 +61,15 @@ USER QUERY:
 
 AI RESPONSE:"""
 
-    try:
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(prompt)
-            
-        return response.text.strip()
-    except Exception as e:
-        return f"[SYSTEM ERROR] Could not connect to neural uplink: {str(e)}"
+    return call_cloudflare_ai(prompt, model=model_name)
 
-import json
-
-def generate_suggestions(context_summary: str, chat_history: str, model_name: str = "gemini-2.5-flash-lite") -> list[str]:
-    if not api_key:
-        return ["System status kya hai?", "Pichla task dikhao", "Data analyze karo", "Mujhe summary chahiye"]
+def generate_suggestions(context_summary: str, chat_history: str, model_name: str = "@cf/meta/llama-3.3-70b-instruct-fp8-fast") -> list[str]:
+    fallback_suggestions = ["System status kya hai?", "Pichla task dikhao", "Data analyze karo", "Mujhe summary chahiye"]
         
     prompt = f"""You are HorizonByte, an advanced neural AI assistant in a cyber-terminal environment.
-Generate exactly 4 short, action-oriented, or highly relevant follow-up questions/prompts that the user might want to click next, based on the uploaded document summary and recent chat history.
+Generate exactly 4 short, action-oriented, or highly relevant follow-up questions/prompts that the user might want to click next, based on the document summary and chat history.
 Each suggestion should be under 40 characters and read like a terminal command or short query.
-Wrap the 4 strings in a JSON array. Do not include markdown formatting like ```json.
+Wrap the 4 strings in a JSON array. Return ONLY valid JSON, nothing else. No markdown, no preambles.
 
 DOCUMENT SUMMARY:
 {context_summary}
@@ -63,24 +80,18 @@ RECENT CHAT HISTORY:
 JSON ARRAY OF 4 SUGGESTIONS:"""
 
     try:
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(prompt)
-        text = response.text.strip()
-        if text.startswith("```json"):
-            text = text[7:]
-        if text.startswith("```"):
-            text = text[3:]
-        if text.endswith("```"):
-            text = text[:-3]
+        text = call_cloudflare_ai(prompt, model=model_name)
+        # Regex to safely extract the JSON array bypassing Llama's conversational text
+        match = re.search(r'\[.*\]', text, re.DOTALL)
+        if match:
+            text = match.group(0)
+            
         return json.loads(text.strip())
     except Exception as e:
-        # Fallback to static if it fails
-        return ["System status kya hai?", "Pichla task dikhao", "Data analyze karo", "Mujhe summary chahiye"]
+        print(f"[DEBUG] Failed to parse JSON suggestions: {e}")
+        return fallback_suggestions
 
-def rephrase_text(text: str, tone: str, model_name: str = "gemini-2.5-flash-lite") -> str:
-    if not api_key:
-        return "ERROR: GEMINI_API_KEY environment variable is not set."
-        
+def rephrase_text(text: str, tone: str, model_name: str = "@cf/meta/llama-3.3-70b-instruct-fp8-fast") -> str:
     prompt = f"""You are HorizonByte, an advanced neural AI assistant. 
 The user provided a text written in Hinglish (a mix of Hindi and English) or English.
 Please translate/rephrase it entirely into English using a '{tone}' tone. 
@@ -91,10 +102,4 @@ ORIGINAL TEXT:
 
 REPHRASED TEXT ({tone} TONE):"""
 
-    try:
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(prompt)
-        return response.text.strip()
-    except Exception as e:
-        return f"[SYSTEM ERROR] Rephrase failed: {str(e)}"
-
+    return call_cloudflare_ai(prompt, model=model_name)
