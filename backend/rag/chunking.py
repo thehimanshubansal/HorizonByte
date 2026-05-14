@@ -1,4 +1,4 @@
-def recursive_character_splitter(text: str, chunk_size: int = 1000, chunk_overlap: int = 250) -> list[str]:
+def recursive_character_splitter(text: str, chunk_size: int = 1000, chunk_overlap: int = 150) -> list[str]:
     """
     Splits text recursively based on a hierarchy of separators to keep semantic blocks together.
     """
