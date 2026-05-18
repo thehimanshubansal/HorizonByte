@@ -103,3 +103,27 @@ ORIGINAL TEXT:
 REPHRASED TEXT ({tone} TONE):"""
 
     return call_cloudflare_ai(prompt, model=model_name)
+
+def rerank_chunks(query: str, chunks: list[str]) -> list[str]:
+    try:
+        # Number the chunks for the LLM
+        context_str = "\n\n".join([f"[CHUNK {i}]: {chunk}" for i, chunk in enumerate(chunks)])
+        
+        prompt = f"""You are a Re-ranker. Given a User Query and a set of Context Chunks, identify which chunks are most relevant.
+        
+        USER QUERY: {query}
+        
+        CONTEXT CHUNKS:
+        {context_str}
+        
+        INSTRUCTION: Return ONLY the indices (e.g., 0, 2, 4) of the 3 most relevant chunks, in order of relevance. 
+        Format: A comma-separated list of numbers. Do not include any other text.
+        """
+        
+        response = call_cloudflare_ai(prompt) # Calls your Llama 3.3
+        # Parse indices from string "0, 2, 4"
+        indices = [int(i.strip()) for i in response.split(",")]
+        return [chunks[i] for i in indices[:3]]
+    except Exception as e:
+        print(f"[DEBUG] Re-ranker failed, falling back to top 3: {e}")
+        return chunks[:3] # Fallback to default

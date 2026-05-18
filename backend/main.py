@@ -2,15 +2,22 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse
 import os
 import shutil
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_forwarded_address
+from slowapi.errors import RateLimitExceeded
+from fastapi import Request
 
 from backend.rag.ingestion import load_document
 from backend.rag.chunking import recursive_character_splitter
 from backend.rag.vector_store import vector_store
 from backend.rag.memory import memory
-from backend.rag.llm import generate_response, generate_suggestions, rephrase_text
+from backend.rag.llm import generate_response, generate_suggestions, rephrase_text, rerank_chunks
 
 app = FastAPI()
 
+limiter = Limiter(key_func=get_forwarded_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Make data directory
 os.makedirs("data", exist_ok=True)
 
@@ -59,7 +66,9 @@ async def upload_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/chat")
+@limiter.limit("10/minute")
 async def chat(
+    request: Request,
     query: str = Form(...), 
     session_id: str = Form("SID-77-B-0X42"),
     model: str = Form("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),  # Updated default
@@ -69,10 +78,15 @@ async def chat(
     chat_history = memory.get_context(session_id)
     
     # 2. Retrieve vector context
-    retrieved_chunks = vector_store.similarity_search(query)
+    retrieved_chunks = vector_store.similarity_search(query, k=10)
+
+    if len(retrieved_chunks) > 3:
+        final_context = rerank_chunks(query, retrieved_chunks)
+    else:
+        final_context = retrieved_chunks
     
     # 3. Generate Response
-    response_text = generate_response(query, retrieved_chunks, chat_history, model_name=model, persona=persona)
+    response_text = generate_response(query, final_context, chat_history, model_name=model, persona=persona)
     
     # 4. Save to memory
     memory.add_message(session_id, "user", query)
@@ -105,3 +119,8 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+@app.get("/health")
+async def health_check():
+    """Lightweight endpoint for UptimeRobot."""
+    return {"status": "ok"}
