@@ -41,7 +41,12 @@ async def upload_document(
 
     if not file.filename.endswith(('.pdf', '.txt')):
         raise HTTPException(status_code=400, detail="Only PDF and TXT files are supported.")
-        
+
+    MAX_SIZE = 500 * 1024
+    content = await file.read()
+    if len(content) > MAX_SIZE:
+        raise HTTPException(status_code=400, detail="File too large (max 500KB).")
+   
     file_path = f"data/{file.filename}"
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
