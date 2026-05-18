@@ -6,8 +6,6 @@ uvicorn
 python-multipart
 
 # AI / ML Models
-torch
-sentence-transformers
 faiss-cpu
 
 # Utilities

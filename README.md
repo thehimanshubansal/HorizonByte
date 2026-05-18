@@ -9,7 +9,7 @@
 - **FastAPI** (Python) as the backend web server
 - **FAISS** as the in-memory vector database
 - **Cloudflare Workers AI (Llama 3.3 70B)** for LLM inference
-- **HuggingFace (`sentence-transformers/all-MiniLM-L6-v2`)** for local, zero-cost embedding generation
+- **Cloudflare (`bge-small-en-v1.5`)** for serverless cloud service embedding eneration
 - **PyMuPDF** for PDF text extraction
 - A custom recursive text chunker (no LangChain dependency)
 - A single-page **Cyber-Brutalist** frontend (HTML + Tailwind CSS + Vanilla JS)
@@ -91,7 +91,7 @@ Open your web browser and navigate to:
 |---|---|---|
 | **Web Framework** | FastAPI + Uvicorn | Fast, async, type-safe Python APIs |
 | **LLM** | Llama 3.3 | SOTA reasoning, good at instruction following |
-| **Embeddings** | `sentence-transformers/all-MiniLM-L6-v2` | Local, 384-dimensional vectors |
+| **Embeddings** | `bge-small-en-v1.5` | serverless cloud service, 384-dimensional vectors |
 | **Vector DB** | FAISS (in-memory) | Zero-cost, in-process, low latency |
 | **Document Parsing** | PyMuPDF (`fitz`) | Fast PDF text extraction |
 | **Frontend** | HTML + Tailwind CSS + Vanilla JS | Zero build step, single-file |
@@ -124,7 +124,7 @@ User's Browser (index.html + Vanilla JS)
 User types query
     → POST /api/chat
     → Retrieve chat history from memory (TTL-filtered)
-    → Embed query locally using HuggingFace (MiniLM)
+    → Embed query using Cloudflare (bge-small)
     → FAISS similarity_search → top-3 relevant chunks
     → Build prompt (persona + context + history + query)
     → Cloudflare Llama 3.3 generates response
@@ -138,7 +138,7 @@ User uploads PDF/TXT
     → POST /api/upload
     → PyMuPDF extracts raw text
     → recursive_character_splitter → list of chunks
-    → HuggingFace embeds all chunks locally
+    → Cloudflare API embeds all chunks into vectors
     → FAISS index stores embeddings (chunk_map stores text)
     → First 1000 chars saved as document summary in memory
 ```
@@ -187,13 +187,13 @@ This is the most algorithmically interesting file — a **custom implementation*
 #### `backend/rag/vector_store.py` — FAISS Vector Store
 A class (`VectorStore`) wrapping the FAISS index:
 - **Index type:** `faiss.IndexFlatL2` — brute-force L2 (Euclidean) distance search
-- **Embedding model:** `sentence-transformers/all-MiniLM-L6-v2` (Local, 384-dimensional vectors)
+- **Embedding model:** `bge-small-en-v1.5`, a 384-dimensional model specifically fine-tuned for high-performance retrieval in RAG systems.
 - **`chunk_map`:** A Python dict mapping FAISS internal index IDs → original chunk text
-- **`add_chunks()`:** Embeds chunks with `task_type="retrieval_document"` and adds to FAISS
-- **`similarity_search()`:** Embeds the query with `task_type="retrieval_query"`, searches FAISS for top-k=3 nearest neighbors
+- **`add_chunks()`:** add chunks to FAISS
+- **`similarity_search()`:** searches FAISS for top-k=3 nearest neighbors
 
-**Why HuggingFace Embeddings?**
-> "Using `sentence-transformers` locally eliminates the need for a third-party embedding API (like Google Llama 3.3). This results in zero costs for embedding, drastically lower latency, and 100% data privacy since the vectors are generated inside the app container."
+**Why Cloudflare Embeddings?**
+> "Using Cloudflare’s serverless bge-small embedding API eliminates the need for heavy local dependencies like torch and sentence-transformers. This reduces the Render container memory footprint by over 200MB, preventing OOM crashes, while maintaining industry-standard retrieval performance."
 
 ---
 
@@ -350,7 +350,7 @@ Instead of a standard LLM API, HorizonByte uses Cloudflare's serverless AI infer
 
 #### ❓ How did you solve the Render memory limits?
 1. **CPU-only PyTorch:** Used `--extra-index-url https://download.pytorch.org/whl/cpu` in `requirements.txt` to avoid bulky CUDA binaries.
-2. **Local Model Selection:** Used `all-MiniLM-L6-v2` (~80MB RAM usage).
+2. **Local Model Selection:** Used `bge-small-en-v1.5` (~80MB RAM usage).
 3. **Index Reset:** Used `vector_store.reset_store()` to clear RAM when a new document is uploaded.
 
 ---
@@ -360,8 +360,6 @@ Instead of a standard LLM API, HorizonByte uses Cloudflare's serverless AI infer
 1. **No LangChain / LlamaIndex** — Built the RAG pipeline from scratch (chunker, vector store, memory). Shows genuine understanding of the underlying concepts.
 
 2. **Custom Recursive Chunker** — Mirrors the algorithm used in production frameworks but without the dependency.
-
-3. **Dual Embedding Strategy** — Uses `task_type="retrieval_document"` for indexing and `task_type="retrieval_query"` for querying. This is best practice for better retrieval accuracy.
 
 4. **Monolith Deployment Pattern** — Clever use of FastAPI to serve both the API and the static frontend from one process — no separate frontend server, no CORS issues.
 
@@ -386,7 +384,7 @@ Instead of a standard LLM API, HorizonByte uses Cloudflare's serverless AI infer
 > The similarity search returns the top-3 chunks regardless of relevance. The LLM prompt explicitly instructs: *"If the context does not contain the answer, state that there is insufficient data."* So the model should decline to hallucinate.
 
 **Q: What is chunk overlap and why is it important?**
-> If a critical piece of information spans two adjacent chunks (at the boundary), without overlap you'd have half the context in each. With `overlap=250 chars`, the end of the previous chunk is repeated at the start of the next — ensuring boundary information is always captured in full.
+> If a critical piece of information spans two adjacent chunks (at the boundary), without overlap you'd have half the context in each. With `overlap=150 chars`, the end of the previous chunk is repeated at the start of the next — ensuring boundary information is always captured in full.
 
 **Q: How does the Hinglish rephrase work technically?**
 > It's a zero-shot prompt engineering task. The Llama 3.3 model is instructed with a precise prompt: take this Hinglish text, return ONLY the rephrased English version in the specified tone. No training or fine-tuning was needed.
