@@ -4,13 +4,15 @@
 
 [![Production Link](https://img.shields.io/badge/MVP-HorizonByte_on_render-green)](https://horizonbyte.onrender.com)
 
-**HorizonByte** is a full-stack, document-aware AI chatbot built from scratch without any high-level AI framework like LangChain or LlamaIndex. It implements a custom **Retrieval-Augmented Generation (RAG)** pipeline using:
+**HorizonByte** is a full-stack, document-aware AI chatbot built from scratch without any high-level AI framework like LangChain or LlamaIndex. Designed for memory-constrained environments like Render's free tier, it prioritizes local processing and efficient API utilization. It implements a custom **Retrieval-Augmented Generation (RAG)** pipeline using:
 
 - **FastAPI** (Python) as the backend web server
 - **FAISS** as the in-memory vector database
 - **Cloudflare Workers AI (Llama 3.3 70B)** for LLM inference
 - **HuggingFace (`sentence-transformers/all-MiniLM-L6-v2`)** for local, zero-cost embedding generation
 - **PyMuPDF** for PDF text extraction
+- Local PII redaction
+- LLM-based re-ranking
 - A custom recursive text chunker (no LangChain dependency)
 - A single-page **Cyber-Brutalist** frontend (HTML + Tailwind CSS + Vanilla JS)
 - An additional **Hinglish-to-English Rephrase Engine** powered by Llama 3.3
@@ -26,11 +28,11 @@ HorizonByte/
 ├── backend/
 │   ├── main.py              # FastAPI app, all routes
 │   └── rag/
-│       ├── ingestion.py     # PDF/TXT → raw text
+│       ├── ingestion.py     # PDF/TXT → raw text + Regex PII Scrubbing
 │       ├── chunking.py      # Recursive text splitter
 │       ├── vector_store.py  # FAISS wrapper + embeddings
 │       ├── memory.py        # TTL-based session memory
-│       └── llm.py           # LLM calls: chat, suggestions, rephrase
+│       └── llm.py           # LLM calls: chat, suggestions, rephrase, prompt based Re-ranking
 ├── frontend/
 │   └── index.html           # Entire frontend (654 lines)
 ├── data/                    # Uploaded documents (ephemeral)
@@ -67,9 +69,11 @@ You will need a Google Gemini API key to run the models.
 Ensure your environment has the API key set. You can set it in your terminal before running:
 ```bash
 # On Windows
-set GEMINI_API_KEY=your_api_key_here
+set CLOUDFLARE_ACCOUT_ID=your_account_id_here
+set CLOUDFLARE_API_TOKEN=your_token_here
 # On macOS/Linux
-export GEMINI_API_KEY=your_api_key_here
+export CLOUDFLARE_ACCOUT_ID=your_account_id_here
+export CLOUDFLARE_API_TOKEN=your_token_here
 ```
 *(Alternatively, you can create a `.env` file if you have configured python-dotenv).*
 
@@ -165,6 +169,7 @@ The FastAPI app with 4 routes:
 - Uses **PyMuPDF (`fitz`)** to read PDF files page-by-page
 - Handles `.txt` files with UTF-8 encoding
 - Cleans text: removes null bytes (`\x00`), collapses multiple whitespaces using `re.sub(r'\s+', ' ', text)`
+- Using Regex for PII Redaction (Emails/Phones), `re.sub(r'[\w\.-]+@[\w\.-]+\.\w+', '[EMAIL_REDACTED]', text)`
 
 ---
 
@@ -235,6 +240,11 @@ AI RESPONSE:
 - Prompts Llama 3.3 to translate/rephrase to English in that tone
 - Returns only the final English string
 
+#### 4. `rerank_chunks()` — logic for LLM-based re-ranking
+- Takes top 10 chunks
+- Prompts Llama 3.3 to return 3 most relevant chunks
+- If fails has a fallback to just use the first 3 chunks
+- This refines the pool from 10 to the best 3
 ---
 
 ### `frontend/index.html` — The Entire Frontend (654 lines)
@@ -244,6 +254,7 @@ A single HTML file with:
 - **Three tabs:** Terminal (main chat), About (modal), Config (modal)
 - **Config system:** Saves to `localStorage` (model, persona, chunk size, theme). Theme switching uses CSS `hue-rotate` filter — elegant one-liner to shift the entire color scheme
 - **Vanilla JS:** All API calls use the native `fetch()` API with `FormData`
+- **SlowAPI rate-limiting (10 req/min):** Prevent users from burning through your Cloudflare neurons too quickly.
 
 ---
 
@@ -293,6 +304,21 @@ LLMs have a **context window limit** (max tokens per prompt). You can't feed a 2
 2. Only retrieving the **most relevant** 3-5 chunks for each query
 
 **Why overlap?** If a key sentence falls at the boundary between two chunks, overlap ensures it appears in at least one of them. Without overlap, you'd lose context at every boundary.
+
+--- 
+
+#### ❓ What is LLM-based Re-ranking?
+Retrieving vectors via `FAISS` is fast but can be imprecise. HorizonByte now retrieves `k=10` chunks and passes them to the LLM, asking it to rank the most relevant ones. This "LLM-as-a-Re-ranker" pattern provides higher retrieval accuracy than basic Euclidean distance alone, without needing extra RAM for a heavy re-ranking model.
+
+---
+
+#### ❓ What is PII Scrubbing?
+PII (Personally Identifiable Information) like email addresses or phone numbers can be a liability. The `ingestion.py` module uses a **Regex redaction layer** to strip this data during the upload process. By scrubbing *before* the document hits the vector store, we ensure the LLM never "sees" sensitive user data in the context window.
+
+---
+
+#### ❓ How does Rate Limiting work?
+We use `SlowAPI` to enforce a 10-requests-per-minute limit per IP address. This prevents users (or bots) from burning through your daily Cloudflare "Neuron" quota, ensuring the service remains available for everyone throughout the day.
 
 ---
 
@@ -348,6 +374,11 @@ Instead of a standard LLM API, HorizonByte uses Cloudflare's serverless AI infer
 
 ---
 
+#### ❓ Why not used Microsoft's Presidio?
+Microsoft's Presidio is the professional way to do this. It uses Named Entity Recognition (NER) to detect names, SSNs, and IDs. It requires loading machine learning models (Spacy or similar) to recognize entities like "Names" and "Addresses." This will add ~200MB+ of RAM usage, which will likely push you over the 512MB limit, causing an OOM (Out of Memory) crash. Used Regex-based PII redaction because it has zero RAM overhead and executes in microseconds.
+
+---
+
 #### ❓ How did you solve the Render memory limits?
 1. **CPU-only PyTorch:** Used `--extra-index-url https://download.pytorch.org/whl/cpu` in `requirements.txt` to avoid bulky CUDA binaries.
 2. **Local Model Selection:** Used `all-MiniLM-L6-v2` (~80MB RAM usage).
@@ -368,6 +399,14 @@ Instead of a standard LLM API, HorizonByte uses Cloudflare's serverless AI infer
 5. **Hinglish Engine** — A unique, India-specific feature that addresses a real language barrier for millions of users.
 
 6. **TTL-based Memory** — Automatic context expiration prevents prompt bloat on long sessions.
+
+7. **Serverless-Aware:** Designed specifically to survive the strict RAM/Storage limitations of modern free-tier platforms like Render.
+
+8. **Zero-Dependency RAG:** Custom logic for chunking and vector management, avoiding the "black box" complexity of LangChain.
+
+9. **Production-Ready Safeguards:** Implements rate limiting and PII redaction—features often missed in student prototypes but mandatory for real-world deployment.
+
+10. **Optimized Retrieval:** The transition from simple FAISS retrieval to **LLM-assisted re-ranking** shows a sophisticated understanding of improving RAG precision without the RAM overhead of a secondary re-ranking model.
 
 ---
 
