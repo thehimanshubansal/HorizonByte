@@ -446,6 +446,11 @@
         
         localStorage.setItem('horizonbyte_config', JSON.stringify(appConfig));
         applyTheme();
+        if (oldChunkSize !== appConfig.chunkSize) {
+            filePreviewContainer.innerHTML = '';
+            uploadStatus.textContent = "[SYSTEM] Chunk size changed. Please re-upload document.";
+            uploadStatus.classList.remove('hidden');
+        }
         document.getElementById('config-modal').classList.add('hidden');
     }
 
@@ -636,6 +641,15 @@
     fileUpload.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        const MAX_SIZE = 500 * 1024; // 500KB in bytes
+        if (file.size > MAX_SIZE) {
+            alert("File too large! Please upload a PDF or TXT smaller than 500KB to maintain system stability.");
+            e.target.value = ''; // Reset file input
+            return;
+        }
+        
+        filePreviewContainer.innerHTML = '';
 
         // Show file preview
         filePreviewContainer.innerHTML = `
