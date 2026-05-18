@@ -3,7 +3,8 @@ from fastapi.responses import HTMLResponse
 import os
 import shutil
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_forwarded_address
+from slowapi.util import get_remote_address
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from slowapi.errors import RateLimitExceeded
 from fastapi import Request
 
@@ -14,8 +15,9 @@ from backend.rag.memory import memory
 from backend.rag.llm import generate_response, generate_suggestions, rephrase_text, rerank_chunks
 
 app = FastAPI()
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
-limiter = Limiter(key_func=get_forwarded_address)
+limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Make data directory
