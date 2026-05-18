@@ -46,7 +46,9 @@ async def upload_document(
     content = await file.read()
     if len(content) > MAX_SIZE:
         raise HTTPException(status_code=400, detail="File too large (max 500KB).")
-   
+
+    await file.seek(0)
+    
     file_path = f"data/{file.filename}"
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
