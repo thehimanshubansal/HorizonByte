@@ -22,7 +22,8 @@ def call_cloudflare_ai(prompt: str, model: str = "@cf/meta/llama-3.3-70b-instruc
         "messages": [
             {"role": "system", "content": "You are HorizonByte, an advanced neural AI assistant."},
             {"role": "user", "content": prompt}
-        ]
+        ],
+        "max_tokens": 1024
     }
     
     try:
