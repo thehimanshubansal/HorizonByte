@@ -59,14 +59,16 @@ async def upload_document(
         vector_store.reset_store()
 
         # 1. Ingest
+        print(f"[DEBUG] Processing file at: {os.path.abspath(file_path)}")
         raw_text = load_document(file_path)
+        print(f"[DEBUG] Extracted text length: {len(raw_text)}")
         
         # 2. Chunk
         chunks = recursive_character_splitter(raw_text, chunk_size=chunk_size)
         
         # 3. Vector Store
         vector_store.add_chunks(chunks)
-        
+        print(f"[DEBUG] FAISS Index size after add: {vector_store.index.ntotal}") 
         # 4. Save summary for dynamic prompts
         memory.set_document_summary(session_id, raw_text[:1000])
         
