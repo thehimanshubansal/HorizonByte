@@ -82,14 +82,24 @@ JSON ARRAY OF 4 SUGGESTIONS:"""
 
     try:
         text = call_cloudflare_ai(prompt, model=model_name)
-        # Regex to safely extract the JSON array bypassing Llama's conversational text
+        
+        # 1. Clean whitespace
+        text = text.strip()
+        
+        # 2. Aggressive search: Find the first '[' and last ']'
+        # This ignores text before the start and after the end
         match = re.search(r'\[.*\]', text, re.DOTALL)
+        
         if match:
-            text = match.group(0)
+            clean_text = match.group(0)
+            return json.loads(clean_text)
+        else:
+            # If no brackets found, print the raw output so you can see why it failed
+            print(f"[DEBUG] Raw response was not valid JSON: {text}")
+            return fallback_suggestions
             
-        return json.loads(text.strip())
-    except Exception as e:
-        print(f"[DEBUG] Failed to parse JSON suggestions: {e}")
+    except json.JSONDecodeError as e:
+        print(f"[DEBUG] JSON syntax error: {e}")
         return fallback_suggestions
 
 def rephrase_text(text: str, tone: str, model_name: str = "@cf/meta/llama-3.3-70b-instruct-fp8-fast") -> str:

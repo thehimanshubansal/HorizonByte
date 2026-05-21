@@ -34,6 +34,14 @@ async def upload_document(
     session_id: str = Form("SID-77-B-0X42"),
     chunk_size: int = Form(1000)
 ):
+    content = await file.read()
+    
+    # Enforce 500KB limit (500 * 1024 bytes)
+    if len(content) > 512000:
+        raise HTTPException(
+            status_code=413, 
+            detail="File size exceeds the 500KB limit. Please optimize your document."
+        )
     
     # Clear old data from memory so new chunk size applies to fresh state
     vector_store.index.reset() 
