@@ -4,7 +4,7 @@ import requests
 import os
 
 class VectorStore:
-    def __init__(self, model_name: str = 'bge-small-en-v1.5'):
+    def __init__(self, model_name: str = '@cf/baai/bge-small-en-v1.5'):
         self.model_name = model_name
         self.dimension = 384  
         self.index = faiss.IndexFlatL2(self.dimension)
@@ -18,7 +18,7 @@ class VectorStore:
             print("[ERROR] Cloudflare credentials not set.")
             return None
 
-        url = f"https://api.cloudflare.com/client/v4/accounts/{self.account_id}/ai/run/@cf/BAAI/bge-small-en-v1.5"
+        url = f"https://api.cloudflare.com/client/v4/accounts/{self.account_id}/ai/run/@cf/baai/bge-small-en-v1.5"
         headers = {"Authorization": f"Bearer {self.token}"}
         
         try:
